@@ -1,0 +1,18 @@
+{% extends "devices/base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-danger shadow-sm">
+      <div class="card-body">
+        <h3 class="text-danger">Delete Device</h3>
+        <p>Are you sure you want to delete <strong>{{ object.name }}</strong> (<code>{{ object.ip_address }}</code>)? This cannot be undone.</p>
+        <form method="post">
+          {% csrf_token %}
+          <button class="btn btn-danger" type="submit">Yes, delete</button>
+          <a href="{% url 'device-list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
