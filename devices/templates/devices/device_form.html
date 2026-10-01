@@ -3,8 +3,13 @@
 <div class="row justify-content-center">
   <div class="col-md-6">
     <div class="card shadow-sm">
+      <div class="card-header bg-primary-subtle">
+        <h3 class="mb-0">
+          📁 <span class="text-warning-emphasis">{{ active_project.name }}</span>
+          &mdash; {% if object %}Edit{% else %}Add{% endif %} Device
+        </h3>
+      </div>
       <div class="card-body">
-        <h3 class="mb-3">{% if object %}Edit{% else %}Add{% endif %} Device</h3>
         <form method="post" novalidate>
           {% csrf_token %}
           {% for field in form %}
@@ -18,7 +23,7 @@
               </div>
             {% endif %}
           {% endfor %}
-          <button class="btn btn-primary" type="submit">Save</button>
+          <button class="btn btn-primary" type="submit">💾 Save</button>
           <a href="{% url 'device-list' %}" class="btn btn-secondary">Cancel</a>
         </form>
       </div>

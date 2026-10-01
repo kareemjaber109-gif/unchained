@@ -1,0 +1,38 @@
+{% extends "devices/base.html" %}
+{% block title %}kopo &mdash; {% if mode == "edit" %}Edit Project{% else %}New Project{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-header {% if mode == "edit" %}bg-secondary-subtle{% else %}bg-warning-subtle{% endif %}">
+        <h3 class="mb-0">
+          {% if mode == "edit" %}
+            ✎ Edit Project
+          {% else %}
+            ➕ Add New Project
+          {% endif %}
+        </h3>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            </div>
+          {% endfor %}
+          <div class="d-flex gap-2">
+            <button class="btn {% if mode == "edit" %}btn-secondary{% else %}btn-warning{% endif %}" type="submit">
+              {% if mode == "edit" %}💾 Save Changes{% else %}✅ Create Project{% endif %}
+            </button>
+            <a href="{% url 'project-list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

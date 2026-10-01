@@ -3,16 +3,276 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Network Device Inventory{% endblock %}</title>
+  <title>{% block title %}kopo &mdash; Network Device Inventory{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
   <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
-      <a class="navbar-brand" href="{% url 'device-list' %}">🖧 Network Inventory</a>
-      <a class="btn btn-outline-light btn-sm" href="{% url 'admin:index' %}">Admin</a>
+      <a class="navbar-brand" href="{% url 'project-list' %}">🖧 kopo</a>
+      {% if user.is_authenticated %}
+        <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
+          <div class="dropdown">
+            <button class="btn btn-outline-warning btn-sm dropdown-toggle" type="button"
+                    id="projDrop" data-bs-toggle="dropdown" aria-expanded="false">
+              🗂️ {% if active_project %}{{ active_project.name|truncatechars:22 }}{% else %}No Project{% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="projDrop">
+              <li><h6 class="dropdown-header">Switch Project</h6></li>
+              {% if all_projects %}
+                {% for p in all_projects %}
+                  <li>
+                    <form method="post" action="{% url 'project-switch' p.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit"
+                              class="dropdown-item d-flex align-items-center justify-content-between {% if p == active_project %}active fw-bold{% endif %}">
+                        <span>📁 {{ p.name }}</span>
+                        {% if p == active_project %}<span class="ms-2 text-success">●</span>{% endif %}
+                      </button>
+                    </form>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li><span class="dropdown-item text-muted fst-italic small">No projects yet</span></li>
+              {% endif %}
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-primary fw-semibold" href="{% url 'project-add' %}">
+                  ➕ New Project
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item text-secondary" href="{% url 'project-list' %}">
+                  📋 Manage All Projects
+                </a>
+              </li>
+            </ul>
+          </div>
+          <a class="btn btn-warning btn-sm d-none d-md-inline" href="{% url 'project-add' %}">
+            ➕ Add Project
+          </a>
+          <button class="btn btn-outline-info btn-sm" type="button"
+                  data-bs-toggle="offcanvas" data-bs-target="#ptRefCanvas"
+                  aria-controls="ptRefCanvas">
+            📚 Ref
+          </button>
+          <a class="btn btn-outline-light btn-sm" href="/kopo-manage/">Admin</a>
+          <form method="post" action="{% url 'logout' %}" style="display:inline">
+            {% csrf_token %}
+            <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+          </form>
+        </div>
+      {% else %}
+        <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Login</a>
+      {% endif %}
     </div>
   </nav>
+
+  {% if user.is_authenticated %}
+  <div class="offcanvas offcanvas-end bg-dark text-light" tabindex="-1" id="ptRefCanvas"
+       aria-labelledby="ptRefCanvasLabel" data-bs-scroll="true">
+    <div class="offcanvas-header border-bottom border-secondary">
+      <h5 class="offcanvas-title fw-bold" id="ptRefCanvasLabel">
+        📡 Packet Tracer Quick Reference
+      </h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+              aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body small">
+
+      <div class="card bg-transparent border-info mb-4">
+        <div class="card-header bg-info text-dark fw-bold">
+          📡 Cisco Router Models
+        </div>
+        <div class="card-body text-light">
+          <div class="accordion accordion-flush" id="routerAcc">
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="r1841h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#r1841c">
+                  <strong>Cisco 1841</strong> &mdash; SOHO / Small Office
+                </button>
+              </h6>
+              <div id="r1841c" class="accordion-collapse collapse" data-bs-parent="#routerAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Compact ISR for small offices / home offices. 2 Fast Ethernet + WIC slots for serial/WAN expansion. Very common in CCNA lab topologies.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="r1941h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#r1941c">
+                  <strong>Cisco 1941</strong> &mdash; ISR G2 Entry
+                </button>
+              </h6>
+              <div id="r1941c" class="accordion-collapse collapse" data-bs-parent="#routerAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Gen2 ISR with 2 Gigabit Ethernet ports, enhanced security (IOS firewall, IPsec VPN), and modular slots. Great for medium branch sites.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="r2811h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#r2811c">
+                  <strong>Cisco 2811</strong> &mdash; Classic ISR (Lab Favorite)
+                </button>
+              </h6>
+              <div id="r2811c" class="accordion-collapse collapse" data-bs-parent="#routerAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  First-gen ISR, widely used in CCNA/CCNP labs. 2 onboard FE, supports WICs, HWICs, PVDMs. Perfect for serial connections &amp; frame relay practice.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="r2900h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#r2900c">
+                  <strong>Cisco 2901 / 2911</strong> &mdash; ISR G2 Mid-Range
+                </button>
+              </h6>
+              <div id="r2900c" class="accordion-collapse collapse" data-bs-parent="#routerAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Powerful ISR G2 routers (2901 = 2 GE, 2911 = 3 GE). NAT, Zone-Based Firewall, IPsec, DMVPN. The 2911 is the workhorse of enterprise labs.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="r4331h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#r4331c">
+                  <strong>ISR 4331</strong> &mdash; ISR 4000 Series (Modern)
+                </button>
+              </h6>
+              <div id="r4331c" class="accordion-collapse collapse" data-bs-parent="#routerAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Latest gen &mdash; up to 1 Gbps throughput, 3 onboard GE (2 fixed + 1 SFP), application-aware services, Cisco IOS XE, DNA licensing.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-transparent border-success mb-4">
+        <div class="card-header bg-success text-dark fw-bold">
+          🔀 Cisco Switch Models
+        </div>
+        <div class="card-body text-light">
+          <div class="accordion accordion-flush" id="swAcc">
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="s2950h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#s2950c">
+                  <strong>Catalyst 2950</strong> &mdash; Legacy Layer 2
+                </button>
+              </h6>
+              <div id="s2950c" class="accordion-collapse collapse" data-bs-parent="#swAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Entry Layer 2 (12 or 24 FE). Classic for learning VLANs, STP, VTP. No routing &mdash; needs router-on-a-stick for inter-VLAN.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="s2960h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#s2960c">
+                  <strong>Catalyst 2960</strong> &mdash; Lab L2 Workhorse
+                </button>
+              </h6>
+              <div id="s2960c" class="accordion-collapse collapse" data-bs-parent="#swAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  The most popular CCNA lab switch. Layer 2 with 24-48 FE/GE. Full 802.1Q VLANs, PVST+, Rapid PVST, PortFast, BPDU Guard, EtherChannel, QoS.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="s3560h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#s3560c">
+                  <strong>Catalyst 3560</strong> &mdash; Layer 3 (MLS)
+                </button>
+              </h6>
+              <div id="s3560c" class="accordion-collapse collapse" data-bs-parent="#swAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Multilayer switch (L2 + L3). Does Inter-VLAN Routing via SVI interfaces without a router. Supports OSPF, EIGRP, static routing. CCNP ENCOR essential.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item bg-transparent border-secondary">
+              <h6 class="accordion-header" id="s3650h">
+                <button class="accordion-button collapsed bg-transparent text-light small fw-semibold"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#s3650c">
+                  <strong>Catalyst 3650</strong> &mdash; Stackable L3
+                </button>
+              </h6>
+              <div id="s3650c" class="accordion-collapse collapse" data-bs-parent="#swAcc">
+                <div class="accordion-body text-light-emphasis small">
+                  Stackable Layer 3, successor to 3560X. IOS XE, better performance, StackWise-480, advanced security (802.1X, port security), QoS.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-transparent border-warning">
+        <div class="card-header bg-warning text-dark fw-bold">
+          🔬 Router vs Switch &mdash; Quick Compare
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-borderless mb-0 text-light small align-middle">
+              <tbody>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">Layer</th>
+                  <td><span class="text-info">L3 (Network)</span> &mdash; IP</td>
+                  <td><span class="text-success">L2 (Data Link)</span> &mdash; MAC; MLS = L2+L3</td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">Job</th>
+                  <td class="text-light-emphasis">Connects <em>different</em> networks, routes packets</td>
+                  <td class="text-light-emphasis">Connects devices <em>within</em> same network / VLAN</td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">Address</th>
+                  <td>IP Address (dest IP)</td>
+                  <td>MAC Address (dest MAC); SVI = IP on MLS</td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">Broadcast</th>
+                  <td>Blocks &mdash; each port = own domain</td>
+                  <td>1 domain by default; split via VLANs</td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">Use Case</th>
+                  <td>Home router → ISP; WAN edge</td>
+                  <td>Wiring closet → PCs / servers / printers</td>
+                </tr>
+                <tr class="border-bottom border-secondary">
+                  <th class="text-warning">VLANs</th>
+                  <td>Inter-VLAN routing via subinterfaces</td>
+                  <td>Creates VLANs natively; MLS routes via SVIs</td>
+                </tr>
+                <tr>
+                  <th class="text-warning">Ports</th>
+                  <td>Few (2&ndash;8)</td>
+                  <td>Many (12, 24, 48, 96)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center text-secondary mt-4 mb-0 small fst-italic">
+        Tip: Click any model above to expand details.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
   <main class="container">
     {% for message in messages %}
       <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">

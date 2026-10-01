@@ -1,0 +1,91 @@
+{% extends "devices/base.html" %}
+{% block title %}kopo &mdash; My Projects{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">🗂️ My Projects <span class="badge bg-secondary">{{ projects|length }}</span></h2>
+  <a href="{% url 'project-add' %}" class="btn btn-warning">➕ New Project</a>
+</div>
+
+{% if projects %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+    {% for p in projects %}
+      <div class="col">
+        <div class="card h-100 shadow-sm {% if p == active_project %}border-warning border-2{% endif %}">
+          <div class="card-header d-flex justify-content-between align-items-center {% if p == active_project %}bg-warning-subtle{% else %}bg-transparent{% endif %}">
+            <h5 class="card-title mb-0">📁 {{ p.name }}</h5>
+            {% if p == active_project %}
+              <span class="badge bg-success">ACTIVE</span>
+            {% endif %}
+          </div>
+          <div class="card-body">
+            {% if p.description %}
+              <p class="card-text text-muted small mb-2">{{ p.description }}</p>
+            {% else %}
+              <p class="card-text text-muted small mb-2 fst-italic">(no description)</p>
+            {% endif %}
+            <p class="mb-2">
+              <span class="badge bg-info-subtle text-dark">{{ p.devices.count }} device{{ p.devices.count|pluralize }}</span>
+              <small class="text-muted ms-2">Created {{ p.created_at|date:"M j, Y" }}</small>
+            </p>
+          </div>
+          <div class="card-footer bg-transparent d-flex gap-2 flex-wrap">
+            <form method="post" action="{% url 'project-switch' p.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-primary" type="submit">
+                {% if p == active_project %}✓ In Use{% else %}▶ Open{% endif %}
+              </button>
+            </form>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'project-edit' p.pk %}">✎ Edit</a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'project-delete' p.pk %}">🗑 Delete</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-light">
+      <h6 class="mb-0">📊 All Projects Summary</h6>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Devices</th>
+            <th>Created</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in projects %}
+            <tr>
+              <td><strong>{{ p.name }}</strong>{% if p.description %} &mdash; <span class="text-muted small">{{ p.description|truncatechars:40 }}</span>{% endif %}</td>
+              <td><span class="badge bg-info-subtle text-dark">{{ p.devices.count }}</span></td>
+              <td class="text-muted small">{{ p.created_at|date:"M j, Y" }}</td>
+              <td>{% if p == active_project %}<span class="badge bg-success">ACTIVE</span>{% else %}<span class="badge bg-light text-muted">—</span>{% endif %}</td>
+              <td class="text-end">
+                <form method="post" action="{% url 'project-switch' p.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Open</button>
+                </form>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'project-edit' p.pk %}">Edit</a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'project-delete' p.pk %}">Del</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="card shadow-sm text-center py-5">
+    <div class="card-body">
+      <h3 class="text-muted mb-3">📁 No projects yet</h3>
+      <p class="text-muted mb-4">Create your first project to start organizing network devices separately.</p>
+      <a href="{% url 'project-add' %}" class="btn btn-warning btn-lg">➕ Create Your First Project</a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

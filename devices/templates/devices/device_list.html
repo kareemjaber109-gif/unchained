@@ -1,12 +1,25 @@
 {% extends "devices/base.html" %}
+{% block title %}kopo &mdash; {{ active_project.name|default:"Devices" }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2 class="mb-0">Devices <span class="badge bg-secondary">{{ devices|length }}</span></h2>
-  <a href="{% url 'device-add' %}" class="btn btn-primary">+ Add Device</a>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-0">
+      📁 <span class="text-warning">{{ active_project.name }}</span>
+      <small class="h5 text-muted ms-2">Devices</small>
+      <span class="badge bg-secondary ms-1">{{ devices|length }}</span>
+    </h2>
+    {% if active_project.description %}
+      <p class="text-muted small mb-0 mt-1">{{ active_project.description }}</p>
+    {% endif %}
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'project-list' %}">🗂 Projects</a>
+    <a href="{% url 'device-add' %}" class="btn btn-primary">➕ Add Device</a>
+  </div>
 </div>
 
 <form method="get" class="input-group mb-3">
-  <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by device name...">
+  <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search device names within this project...">
   <button class="btn btn-outline-secondary" type="submit">Search</button>
   {% if q %}<a href="{% url 'device-list' %}" class="btn btn-outline-danger">Clear</a>{% endif %}
 </form>
@@ -14,7 +27,7 @@
 <div class="card shadow-sm">
   <table class="table table-hover mb-0 align-middle">
     <thead class="table-dark">
-      <tr><th>Name</th><th>IP Address</th><th>Type</th><th>Status</th><th class="text-end">Actions</th></tr>
+      <tr><th>Name</th><th>IP Address</th><th>Type</th><th>VLAN</th><th>Status</th><th class="text-end">Actions</th></tr>
     </thead>
     <tbody>
     {% for d in devices %}
@@ -22,6 +35,7 @@
         <td><a href="{% url 'device-edit' d.pk %}" class="fw-semibold text-decoration-none">{{ d.name }}</a></td>
         <td><code>{{ d.ip_address }}</code></td>
         <td>{{ d.get_device_type_display }}</td>
+        <td>{% if d.vlan_id %}<span class="badge bg-info text-dark">{{ d.vlan_id }}</span>{% else %}<span class="text-muted">&mdash;</span>{% endif %}</td>
         <td>{% if d.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
         <td class="text-end">
           <a href="{% url 'device-edit' d.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -29,9 +43,19 @@
         </td>
       </tr>
     {% empty %}
-      <tr><td colspan="5" class="text-center text-muted py-4">No devices found.</td></tr>
+      <tr>
+        <td colspan="6" class="text-center text-muted py-5">
+          <p class="mb-2">No devices in <strong>{{ active_project.name }}</strong> yet.</p>
+          <a href="{% url 'device-add' %}" class="btn btn-primary">➕ Add First Device</a>
+        </td>
+      </tr>
     {% endfor %}
     </tbody>
   </table>
+</div>
+
+<div class="text-center text-muted small mt-4">
+  💡 Tip: Use the <strong class="text-warning">🗂️ Project dropdown</strong> in the navbar to switch projects, or click
+  <strong class="text-info">📚 Ref</strong> for the Packet Tracer models reference sidebar.
 </div>
 {% endblock %}
